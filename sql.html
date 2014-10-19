@@ -1,0 +1,44 @@
+<html>
+<head>
+<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
+<script type="text/javascript">
+
+var encrypted = CryptoJS.AES.encrypt("estoesunaprueba", "password"); // Encrypt "estoesunaprueba" in AES using "password" as a Password
+var db = openDatabase('encripted', '1.0', 'Test DB', 2 * 1024 * 1024); // Name, Version, Description, size
+var msg; // Create msg var
+
+db.transaction(function (tx) { // Starting the process of a database
+	tx.executeSql('CREATE TABLE IF NOT EXISTS PRUEBAS (id unique, prueba)'); // Create the table
+	var secquery = 'INSERT INTO PRUEBAS (id, prueba) VALUES (1,"' + encrypted + '")'; // Put the data in the database 
+	tx.executeSql(secquery); // Execute the query
+	msg = '<p>Data inserted in row.</p>'; // Create message that the data was inserted in the DB
+	document.querySelector('#status').innerHTML =  msg; // Write it
+});
+
+function unhex(hexx) { // This is for unhexing the unencrypted AES
+	var hex = hexx.toString();// force conversion
+	var str = ''; // create var str
+	for (var i = 0; i < hex.length; i += 2) // move through word every two steps
+		str += String.fromCharCode(parseInt(hex.substr(i, 2), 16)); // get the string from hex
+	return str; // Return the str value
+}
+
+
+db.transaction(function (tx) { // Starting the process of the database
+	tx.executeSql('SELECT * FROM PRUEBAS', [], function (tx, results) { // Query for getting data from pruebas
+	msg = "<p> Data Found:</p>"; // Message to the user
+	document.querySelector('#status').innerHTML +=  msg; // Write the message to the user
+	msg = "<p><b>" + unhex(CryptoJS.AES.decrypt(results.rows.item(0).prueba, "password")) + "</b></p>"; // Show Unencrypted message - Get results from DB
+	document.querySelector('#status').innerHTML +=  msg; // Write unencrypted message
+   
+ }, null);
+});
+</script>
+</head>
+
+<body bgcolor="black">
+
+<div id="status" name="status" style="color:#00ff00;">Status Message</div>
+
+</body>
+</html>
